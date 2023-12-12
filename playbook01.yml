@@ -1,0 +1,122 @@
+---
+# Learning about Playbooks
+- name: bootstrapping and new user creation
+  hosts: raiders        # our group in our inventory
+  gather_facts: no
+
+  vars:
+    newuser1: marian
+    newuser2: belloq
+    newuser3: willie
+    newuser4: elsa
+
+  tasks:
+  # use the raw module
+  - name: update apt with latest repo info
+    raw: "apt update -y"
+    become: yes
+
+  - name: install py3 and pip3 with ansible raw
+    raw: "apt install -y python3-pip"
+    become: yes
+
+  - name: create new group
+    group:
+      name: indymovies
+      state: present
+    become: yes
+
+  - name: Add newuser1 to target hosts
+    user:
+      name: "{{ newuser1 }}"
+      state: present
+      group: indymovies
+    become: yes
+
+  - name: Add newuser2 to target hosts   
+    user:
+      name: "{{ newuser2 }}"
+      state: present
+      group: indymovies
+    become: yes
+
+  - name: add newuser3 to target hosts
+    user:
+      name: "{{ newuser3 }}"
+      state: present
+      group: indymovies
+    become: yes
+
+  - name: add newuser4 to target hosts
+    user:
+      name: "{{ newuser4 }}"
+      state: present
+      group: indymovies
+    become: yes
+To save and quit out of vim, press ESC and then type :wq.
+
+Exciting times! Run your Ansible playbook. Be sure to include the inventory flag to point to your inventory (jones).
+
+student@bchd:~$ ansible-playbook ~/mycode/playbook01.yml -i ~/mycode/inv/dev/
+
+All that yellow on the screen means Ansible modified the state of the target machine. Test to see if everything worked by SSHing to the host indy.
+
+student@bchd:~$ ssh indy
+
+Determine if the new user creation playbook was successful. If it was, we should be able to switch to one of the new users, such as marian.
+
+indy@indy:~$ sudo -i -u marian
+
+Issue whoami, the result should be marian, confirming our new user was created.
+
+$ whoami
+
+Exit back to the indy account.
+
+$ exit
+
+If you'd like, switch to one (or more) of the new users such as belloq, willie, or elsa.
+
+Exit the indy machine to return to the Ansible controller.
+
+indy@indy:~$ exit
+
+Great! Next, let's clean up that last playbook with the keyword loop. Loop will allow us to loop across our data, if we just present it in a slightly different manner. Create the playbook playbook01loop.yml
+
+student@bchd:~$ vim ~/mycode/playbook01loop.yml
+
+
+---
+- name: bootstrapping and new user creation
+  hosts: raiders
+  gather_facts: no
+
+  vars:
+    newusers:
+    - marian
+    - belloq
+    - willie
+    - elsa
+
+  tasks:
+  - name: update apt with latest repo info
+    raw: "apt update -y"
+    become: yes
+
+  - name: install py3 and pip3 with ansible raw
+    raw: "apt install -y python3-pip"
+    become: yes
+
+  - name: create new group
+    group:
+      name: indymovies
+      state: present
+    become: yes
+
+  - name: Add newusers to target hosts
+    user:
+      name: "{{ item }}"
+      state: present
+      group: indymovies
+    become: yes
+    loop: "{{ newusers }}"
